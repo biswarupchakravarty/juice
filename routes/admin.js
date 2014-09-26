@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var knox = require('knox');
+var _ = require('lodash');
 
 var client = knox.createClient({
   key: 'AKIAJ5FMVJ3FHNCC357Q',
@@ -8,38 +9,77 @@ var client = knox.createClient({
   bucket: 'static.shiny.co.in'
 });
 
+var beforeFilters = [];
 
+var executeBeforeFilters = function (req, res, next) {
+  _.each(beforeFilters, function (filter) {
+    filter(req, res);
+  });
+  next();
+};
+
+beforeFilters.push(function prepareNavLinks(req, res) {
+  if (req.xhr) return;
+
+  _.merge(res.locals, {
+    navigationLinks: [{
+      label: 'Dashboard',
+      action: '/'
+    }, {
+      label: 'All Files',
+      action: '/files'
+    }]
+  });
+});
+
+beforeFilters.push(function setCurrentAction(req, res) {
+  if (req.xhr) return;
+
+  var tokens = _.where(req.path.split('/'), function (token) {
+    return token.trim().length > 0
+  });
+  _.merge(res.locals, {
+    action: (req.path === '/') ? '/' : '/' + tokens[tokens.length - 1]
+  });
+});
 
 /* GET home page. */
-router.get('/', function(req, res) {
-  client.list({ prefix: '' }, function (err, data) {
-    res.render('admin/admin', {
-      title: 'Admin Panel',
-      user: {
-        name: 'Biswarup Chakravarty'
-      },
-      details: JSON.stringify(data, null, 2)
-    });
-    /* `data` will look roughly like:
-
-    {
-      Prefix: 'my-prefix',
-      IsTruncated: true,
-      MaxKeys: 1000,
-      Contents: [
-        {
-          Key: 'whatever'
-          LastModified: new Date(2012, 11, 25, 0, 0, 0),
-          ETag: 'whatever',
-          Size: 123,
-          Owner: 'you',
-          StorageClass: 'whatever'
-        },
-        ⋮
-      ]
-    }
-  */
+router.get('/', executeBeforeFilters, function(req, res) {
+  var data = {};
+  
+  res.render('admin/files', {
+    title: 'Admin Panel',
+    user: {
+      name: 'Biswarup Chakravarty'
+    },
+    details: JSON.stringify(data, null, 2)
+  });
 });
+/* `data` will look roughly like:
+// client.list({ prefix: '' }, function (err, data) {
+{
+  Prefix: 'my-prefix',
+  IsTruncated: true,
+  MaxKeys: 1000,
+  Contents: [
+    {
+      Key: 'whatever'
+      LastModified: new Date(2012, 11, 25, 0, 0, 0),
+      ETag: 'whatever',
+      Size: 123,
+      Owner: 'you',
+      StorageClass: 'whatever'
+    },
+    ⋮
+  ]
+}
+*/
+// });
+
+router.get('/files/', executeBeforeFilters, function (req, res, next) {
+  res.render('admin/files', {
+    title: 'POPPPPP'
+  })
 });
 
 module.exports = router;

@@ -1,0 +1,4 @@
+ul.nav.nav-sidebar
+  each link in locals.navigationLinks
+    li(class=(locals.action == link.action ? 'active' : ''))
+      a(href="/admin#{link.action}") #{link.label}

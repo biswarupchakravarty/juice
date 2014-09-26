@@ -1,0 +1,6 @@
+extends ./admin.jade
+
+block action
+  h1 All Your Files
+  pre
+    code #{JSON.stringify(locals, null, 2)}
