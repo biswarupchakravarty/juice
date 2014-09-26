@@ -2,21 +2,14 @@ var express = require('express');
 var router = express.Router();
 var knox = require('knox');
 var _ = require('lodash');
-var NodeCache = require( "node-cache" );
 
-var adminCache = new NodeCache();
+var controller = require('../controllers/admin.js');
 
 var client = knox.createClient({
   key: 'AKIAJ5FMVJ3FHNCC357Q',
   secret: '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',
   bucket: 'static.shiny.co.in'
 });
-
-var AWS = require('aws-sdk');
-AWS.config.loadFromPath('./config/private/aws_config.json');
-var s3 = new AWS.S3(); 
-
-
 
 var beforeFilters = [];
 
@@ -64,45 +57,13 @@ router.get('/', executeBeforeFilters, function(req, res) {
   });
 });
 
-var transform = function (response) {
-  var prefix = 'images/', empty = '';
-  return _.chain(response['Contents'])
-    .map(function (item) {
-      return {
-        name: item['Key'].replace(prefix, empty),
-        updatedAt: new Date(item['LastModified']),
-        size: item['Size']
-      };
-    })
-    .reject({ name: empty })
-    .value();
-};
-
-var BUCKET_CONTENTS_KEY = 'contents_list';
-var BUCKET_CONTENTS_TTL = 60 * 60;
-
-var getFiles = function (callback, options) {
-  var params = { Bucket: 'static.shiny.co.in', Prefix: 'images/', Delimiter: 'images/' };
-  adminCache.get(BUCKET_CONTENTS_KEY, function (err, value) {
-    if (err) return callback(err);
-    if (!_.isEmpty(value)) return callback(null, value[BUCKET_CONTENTS_KEY]);
-    s3.listObjects(params, function(err, data) {
-      data = transform(data);
-      if (err) return callback(err);
-      adminCache.set(BUCKET_CONTENTS_KEY, data, BUCKET_CONTENTS_TTL);
-      return callback(null, data);
-    });
-  });
-};
-
-
 router.get('/files/', executeBeforeFilters, function (req, res, next) {
   if (req.query.refresh === 'true') {
-    adminCache.del(BUCKET_CONTENTS_KEY, function () {
-      res.redirect('/admin/files/');
+    return controller.clearContentsCache(function () {
+      res.redirect(req.baseUrl + req.path);
     });
   } else {
-    getFiles(function (err, files) {
+    return controller.getAllFiles(function (err, files) {
       if (err) return next(err);
       res.render('admin/files', {
         title: 'POPPPPP',
