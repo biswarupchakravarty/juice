@@ -2,5 +2,19 @@ extends ./admin.jade
 
 block action
   h1 All Your Files
-  pre
-    code #{JSON.stringify(locals, null, 2)}
+    a(href="?refresh=true", class="btn btn-warning pull-right")
+      span.glyphicon.glyphicon-refresh
+
+  table.table.table-striped.table-condensed
+    thead
+      tr
+        th File
+        th Size (MBytes)
+        th Updated At
+    tbody
+      each file in locals.files
+        tr
+          td
+            a(href="#{file.name}") #{file.name}
+          td= (file.size/1024/1024).toFixed(3)
+          td= file.updatedAt.toDateString()
