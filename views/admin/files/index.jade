@@ -2,7 +2,7 @@ extends ../admin.jade
 
 block action
   h1 All Your Files
-    a(href="?refresh=true", class="btn btn-warning pull-right")
+    a(href='?refresh=true', class='btn btn-warning pull-right')
       span.glyphicon.glyphicon-refresh
 
   table.table.table-striped.table-condensed
@@ -11,10 +11,14 @@ block action
         th File
         th Size (MBytes)
         th Updated At
+        th Actions
     tbody
       each file in locals.files
         tr
           td
-            a(href="/admin/files/#{file.name}/") #{file.name}
+            a(href='/admin/files/#{file.name}/') #{file.name}
           td= (file.size/1024/1024).toFixed(3)
           td= file.updatedAt.toDateString()
+          td
+            a(href='/admin/juiced-images/new/?file=#{file.name}', class='btn btn-primary btn-xs')
+              span.glyphicon.glyphicon-new-window

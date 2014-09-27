@@ -1,0 +1,22 @@
+extends ../admin.jade
+
+block action
+  h1 All Juiced Images
+    a(href="javascript:window.location.reload(true)", class="btn btn-warning pull-right")
+      span.glyphicon.glyphicon-refresh
+
+  table.table.table-striped.table-condensed
+    thead
+      tr
+        th Name
+        th Annotations
+        th Actions
+    tbody
+      each image in locals.images
+        tr
+          td
+            a(href='/admin/files/#{image.name}/') #{image.name}
+          td= (image.annotations.length)
+          td
+            a(href='/admin/juiced-images/new/?file=#{image.name}', class='btn btn-primary btn-xs')
+              span.glyphicon.glyphicon-new-window

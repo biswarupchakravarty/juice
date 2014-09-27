@@ -1,0 +1,23 @@
+extends ../admin.jade
+
+block action
+  h1 Create New Juiced Image
+  hr
+
+  if locals.imageNameTaken
+    div(class='alert alert-danger', role='alert')
+      strong Oops! 
+      | You already have an image with that name, try something else.
+
+  div.well.row
+    div.col-xs-64
+      form(action='/admin/juiced-images/new', method='POST', role='form')
+        div.input-group
+          input(id='txtJuicedImageName', name='name', type='text', class='form-control', placeholder='Enter image name', autofocus)
+          span(class='input-group-btn')
+            input(type='submit', class='btn btn-default')
+        input(type='hidden', name='file', value='#{locals.file}')
+
+
+  div.image-container
+    img(src='/s/#{locals.file}', class='img-responsive', id='mainImage')

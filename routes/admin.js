@@ -1,15 +1,11 @@
 var express = require('express');
 var router = express.Router();
-var knox = require('knox');
 var _ = require('lodash');
+var JuicedImage = require('../models/juicedImage');
 
 var controller = require('../controllers/admin/admin.js');
 
-var client = knox.createClient({
-  key: 'AKIAJ5FMVJ3FHNCC357Q',
-  secret: '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',
-  bucket: 'static.shiny.co.in'
-});
+require('mongoose').connect('mongodb://localhost/myapp');
 
 var beforeFilters = [];
 
@@ -26,6 +22,9 @@ beforeFilters.push(function prepareNavLinks(req, res) {
     navigationLinks: [{
       label: 'Dashboard',
       action: '/'
+    }, {
+      label: 'All Juiced Images',
+      action: '/juiced-images'
     }, {
       label: 'All Files',
       action: '/files'
@@ -47,12 +46,8 @@ beforeFilters.push(function setCurrentAction(req, res) {
 
 router.get('/', executeBeforeFilters, function(req, res) {
   var data = {};
-  res.render('admin/files', {
+  res.render('admin/index', {
     title: 'Admin Panel',
-    user: {
-      name: 'Biswarup Chakravarty'
-    },
-    details: JSON.stringify(data, null, 2)
   });
 });
 
@@ -76,6 +71,43 @@ router.get('/files/:image', executeBeforeFilters, function (req, res, next) {
   res.locals.image = req.params.image;
   res.render('admin/files/show', {
     title: 'Edit File'
+  });
+});
+
+router.get('/juiced-images/new', executeBeforeFilters, function (req, res, next) {
+  res.locals.file = req.param('file');
+  res.render('admin/juiced/new', {
+    title: 'Create New Juiced Image'
+  });
+});
+
+router.post('/juiced-images/new', executeBeforeFilters, function (req, res, next) {
+  JuicedImage.find({ name: req.body.name }, function (err, images) {
+    if (err) return next(err);
+    if (images.length !== 0) {
+      return res.render('admin/juiced/new', {
+        title: 'Create New Juiced Image',
+        file: req.body.file,
+        imageNameTaken: true
+      });
+    }
+    new JuicedImage({
+      path: req.body.file,
+      name: req.body.name
+    }).save(function (err, file) {
+      if (err) return next(err);
+      res.redirect('/admin/juiced-images/');
+    });
+  });
+});
+
+router.get('/juiced-images', executeBeforeFilters, function (req, res, next) {
+  JuicedImage.find(function (err, images) {
+    if (err) return next(err);
+    res.render('admin/juiced/index', {
+      title: 'All Juiced Images',
+      images: images
+    });
   });
 });
 
