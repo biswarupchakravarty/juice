@@ -3,7 +3,7 @@ var router = express.Router();
 var knox = require('knox');
 var _ = require('lodash');
 
-var controller = require('../controllers/admin.js');
+var controller = require('../controllers/admin/admin.js');
 
 var client = knox.createClient({
   key: 'AKIAJ5FMVJ3FHNCC357Q',
@@ -45,7 +45,6 @@ beforeFilters.push(function setCurrentAction(req, res) {
 });
 
 
-/* GET home page. */
 router.get('/', executeBeforeFilters, function(req, res) {
   var data = {};
   res.render('admin/files', {
@@ -65,7 +64,7 @@ router.get('/files/', executeBeforeFilters, function (req, res, next) {
   } else {
     return controller.getAllFiles(function (err, files) {
       if (err) return next(err);
-      res.render('admin/files', {
+      res.render('admin/files/index', {
         title: 'POPPPPP',
         files: files
       });
@@ -73,27 +72,11 @@ router.get('/files/', executeBeforeFilters, function (req, res, next) {
   }
 });
 
+router.get('/files/:image', executeBeforeFilters, function (req, res, next) {
+  res.locals.image = req.params.image;
+  res.render('admin/files/show', {
+    title: 'Edit File'
+  });
+});
 
 module.exports = router;
-
-
-/* `data` will look roughly like:
-// client.list({ prefix: '' }, function (err, data) {
-{
-  Prefix: 'my-prefix',
-  IsTruncated: true,
-  MaxKeys: 1000,
-  Contents: [
-    {
-      Key: 'whatever'
-      LastModified: new Date(2012, 11, 25, 0, 0, 0),
-      ETag: 'whatever',
-      Size: 123,
-      Owner: 'you',
-      StorageClass: 'whatever'
-    },
-    ⋮
-  ]
-}
-*/
-// });

@@ -1,0 +1,11 @@
+.image-container {
+  position: relative;
+}
+
+.annotation {
+  position: absolute;
+  height: 32px;
+  width: 32px;
+  border: 2px solid black;
+  cursor: pointer;
+}

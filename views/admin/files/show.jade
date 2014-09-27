@@ -1,0 +1,16 @@
+extends ../admin
+
+block append javascripts
+  script(type="text/javascript", src="/javascripts/editFile.js")
+
+block append stylesheets
+  link(rel='stylesheet', href='/stylesheets/admin/edit_file.css')
+
+block action
+  h1 Edit &ndash; #{locals.image}
+  .well.btn-group
+    a.btn.btn-default.btn-large#btnStart Start Annotating
+    a.btn.btn-default.btn-large#btnSave Save Annotations
+    a.btn.btn-default.btn-large#btnCancel Cancel
+  div.image-container
+    img(src="/s/#{locals.image}", class="img-responsive", id="mainImage")

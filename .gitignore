@@ -29,3 +29,5 @@ node_modules
 
 # Private Configuration
 config/private
+
+.DS_Store
