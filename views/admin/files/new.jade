@@ -1,0 +1,20 @@
+extends ../admin
+
+block append javascripts
+  script(type='text/javascript', src='/javascripts/newFile.js')
+
+block action
+  h1 New File
+  hr
+  
+  div(class='row')
+    div(class='well col-xs-12 col-md-8')
+      form(role='form', action='/admin/new', method='post', enctype='multipart/form-data', id='form')
+        div(class='form-group')
+          label(for='txtFileName', class='control-label') Name
+          input(type='text', name='fileName', class='form-control', id='txtFileName', placeholder='Enter File Name', autofocus)
+        div(class='form-group')
+          label(for='fileInput', class='control-label') File
+          input(type='file', name='image', id='fileInput')
+        div(class='form-group')
+          a(href='javascript:void(0)', class='btn btn-block btn-primary', id='lnkUpload') Upload

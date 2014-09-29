@@ -2,9 +2,11 @@ extends ../layout
 
 block append javascripts
   script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js')
+  script(src='/javascripts/nprogress.js')
 
 block append stylesheets
   link(rel='stylesheet', href='/stylesheets/admin.css')
+  link(rel='stylesheet', href='/stylesheets/nprogress.css')
 
 block content
   .container-fluid
@@ -17,4 +19,4 @@ block content
     .row
       .col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
         pre
-          code #{JSON.stringify(locals, null, 2)}
+          //- code #{JSON.stringify(locals, null, 2)}

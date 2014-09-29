@@ -2,6 +2,13 @@ var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
 var JuicedImage = require('../models/juicedImage');
+var fs = require('fs');
+var path = require('path');
+var Q = require('q');
+
+var AWS = require('aws-sdk');
+AWS.config.loadFromPath('./config/private/aws_config.json');
+var s3 = new AWS.S3(); 
 
 var controller = require('../controllers/admin/admin.js');
 
@@ -22,6 +29,9 @@ beforeFilters.push(function prepareNavLinks(req, res) {
     navigationLinks: [{
       label: 'Dashboard',
       action: '/'
+    }, {
+      label: 'New File',
+      action: '/new'
     }, {
       label: 'All Juiced Images',
       action: '/juiced-images'
@@ -108,6 +118,87 @@ router.get('/juiced-images', executeBeforeFilters, function (req, res, next) {
       title: 'All Juiced Images',
       images: images
     });
+  });
+});
+
+router.get('/new', executeBeforeFilters, function (req, res, next) {
+  res.render('admin/files/new', {
+    title: 'New File'
+  });
+});
+
+var fileToImage = function (localFilePath, remoteFileName, callback) {
+  uploadLocalFileToS3(localFilePath, remoteFileName)
+    .then(function () {
+      createNewJuicedImage({
+        name: remoteFileName,
+        path: 'images/' + remoteFileName
+      }, function (err) {
+        if (err) return callback(err);
+        return callback(null);
+      });
+    }, function (err) {
+      callback(err);
+    });
+};
+
+var uploadLocalFileToS3 = function (localFilePath, remoteFileName, callback) {
+  var deferred = Q.defer();
+
+  fs.readFile(localFilePath, function (err, buffer) {
+    if (err) return next(err);
+    s3.putObject({
+      ACL: 'public-read',
+      Bucket: 'static.shiny.co.in',
+      Key: 'images/' + remoteFileName,
+      Body: buffer,
+      ContentType: 'image/jpg'
+    }, function(err, response) {
+      if (err) deferred.reject(err);
+      else deferred.resolve();
+    });
+  });
+
+  return deferred.promise;
+};
+
+var createNewJuicedImage = function (options, callback) {
+  var jImage = new JuicedImage({
+    path: options.path,
+    name: options.name
+  });
+  return jImage.save(function (err, file) {
+    if (err) return callback(err);
+    return callback(null, jImage);
+  });
+};
+
+var writeFileToDisk = function (savedFileName, file, callback) {
+  var fstream = fs.createWriteStream(savedFileName);
+  file.pipe(fstream);
+  fstream.on('close', function (err) {
+    if (err) return callback(err);
+    return callback(null);
+  });
+}
+
+router.post('/new', executeBeforeFilters, function (req, res, next) {
+  var savedFileName, incomingFileName;
+
+  req.pipe(req.busboy);
+  req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
+    incomingFileName = val.toString('utf8');
+  });
+
+  req.busboy.on('file', function (fieldname, file, filename) {
+    savedFileName = path.normalize(__dirname + '/../' + filename);
+    writeFileToDisk(savedFileName, file, function (err) {
+      if (err) return next(err);
+      fileToImage(savedFileName, incomingFileName, function (err) {
+        if (err) return next(err);
+        res.redirect('/admin/files/' + incomingFileName);
+      });
+    });      
   });
 });
 
