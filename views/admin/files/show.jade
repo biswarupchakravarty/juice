@@ -7,10 +7,18 @@ block append stylesheets
   link(rel='stylesheet', href='/stylesheets/admin/edit_file.css')
 
 block action
-  h1 Edit &ndash; #{locals.image}
-  .well.btn-group
-    a.btn.btn-default.btn-large#btnStart Start Annotating
-    a.btn.btn-default.btn-large#btnSave Save Annotations
-    a.btn.btn-default.btn-large#btnCancel Cancel
-  div.image-container
-    img(src="/s/#{locals.image}", class="img-responsive", id="mainImage")
+  div.row
+    h1 Edit &ndash; #{locals.image.name}
+  div.row
+    .well.btn-group
+      a.btn.btn-default.btn-large#btnStart Start Annotating
+      a.btn.btn-default.btn-large#btnSave Save Annotations
+      a.btn.btn-default.btn-large#btnCancel Cancel
+  div.row
+    div.col-xs-12
+      pre
+        code
+          | #{JSON.stringify(locals.image)}
+  div.row
+    div.image-container
+      img(src="/s/?image=#{locals.image.path}", class="img-responsive", id="mainImage")

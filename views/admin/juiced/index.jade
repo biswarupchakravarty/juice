@@ -1,22 +1,44 @@
 extends ../admin.jade
 
+block append javascripts
+  script(type='text/javascript', src='/javascripts/fileList.js')
+
 block action
-  h1 All Juiced Images
+  h1 All Images
     a(href="javascript:window.location.reload(true)", class="btn btn-warning pull-right")
       span.glyphicon.glyphicon-refresh
 
+  //- The Confirm Modal Lightbox
+  .modal.fade#myModal
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal')
+            span(aria-hidden='true') ×
+            span.sr-only Close
+          h4.modal-title Confirm Delete?
+        .modal-body
+          p Are you sure you want to delete this image?
+        .modal-footer
+          button.btn.btn-default(type='button', data-dismiss='modal') Cancel
+          a(class='btn btn-primary delete-image-link') Delete
+            
   table.table.table-striped.table-condensed
     thead
       tr
         th Name
         th Annotations
+        th Dimensions
         th Actions
     tbody
       each image in locals.images
         tr
           td
-            a(href='/admin/files/#{image.name}/') #{image.name}
+            a(href='/admin/files/#{image.id}/') #{image.name}
           td= (image.annotations.length)
           td
-            a(href='/admin/juiced-images/new/?file=#{image.name}', class='btn btn-primary btn-xs')
-              span.glyphicon.glyphicon-new-window
+            | #{image.dimensions.width}px by #{image.dimensions.height}px
+          td
+            .btn-group
+              button(type='button', data-href='/admin/juiced-images/delete/?fileId=#{image.id}', class='btn btn-danger delete-image', data-toggle='modal', data-target="#myModal")
+                span.glyphicon.glyphicon-trash

@@ -1,4 +1,4 @@
-$(function () {
+  $(function () {
   var annotating = false,
     $imageContainer = $('.image-container'),
     annotations = _.chain([]),
@@ -17,7 +17,11 @@ $(function () {
   });
 
   var updateButtonText = function () {
-    $('#btnSave').html('Save ' + (annotations.value().length) + ' Annotation(s)');
+    if (annotations.value().length > 0) {
+      $('#btnSave').html('Save ' + (annotations.value().length) + ' Annotation(s)').attr('disabled', false);
+    } else {
+      $('#btnSave').html('Save Annotations').attr('disabled', true);
+    }
   };
 
   $imageContainer.on('click', function (e) {

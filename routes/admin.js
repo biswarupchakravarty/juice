@@ -4,7 +4,15 @@ var _ = require('lodash');
 var JuicedImage = require('../models/juicedImage');
 var fs = require('fs');
 var path = require('path');
+var sizeOf = require('image-size');
 var Q = require('q');
+
+var CONSTANTS = {
+  S3_BUCKET: 'static.shiny.co.in'
+}
+
+var mod_vasync = require('vasync');
+var mod_util = require('util');
 
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config/private/aws_config.json');
@@ -77,10 +85,15 @@ router.get('/files/', executeBeforeFilters, function (req, res, next) {
   }
 });
 
-router.get('/files/:image', executeBeforeFilters, function (req, res, next) {
-  res.locals.image = req.params.image;
-  res.render('admin/files/show', {
-    title: 'Edit File'
+router.get('/files/:id', executeBeforeFilters, function (req, res, next) {
+  JuicedImage.find({ _id: req.params.id }, function (err, images) {
+    if (err) return next(err);
+    if (images.length === 0) return next();
+    var image = images[0];
+    res.render('admin/files/show', {
+      title: 'Edit File',
+      image: image
+    });
   });
 });
 
@@ -111,6 +124,32 @@ router.post('/juiced-images/new', executeBeforeFilters, function (req, res, next
   });
 });
 
+var removeJuicedImage = function (id, callback) {
+  JuicedImage.find({ _id: id }, function (err, image) {
+    if (err) return callback(err);
+    if (image.length !== 0) return callback(new Error('Could not find document with id: ' + id));
+    mod_vasync.parallel({
+      funcs: [
+        function (callback) {
+          s3.deleteObject({
+            Bucket: CONSTANTS.S3_BUCKET,
+            Key: image[0].path
+          }, callback);
+        }, function (callback) {
+          JuicedImage.remove({ _id: id }, callback);
+        }
+      ]
+    }, callback);
+  });
+};
+
+router.get('/juiced-images/delete', executeBeforeFilters, function (req, res, next) {
+  removeJuicedImage(req.query.fileId, function (err) {
+    if (err) return next(err);
+    res.redirect('back');
+  });
+});
+
 router.get('/juiced-images', executeBeforeFilters, function (req, res, next) {
   JuicedImage.find(function (err, images) {
     if (err) return next(err);
@@ -127,46 +166,46 @@ router.get('/new', executeBeforeFilters, function (req, res, next) {
   });
 });
 
-var fileToImage = function (localFilePath, remoteFileName, callback) {
-  uploadLocalFileToS3(localFilePath, remoteFileName)
-    .then(function () {
-      createNewJuicedImage({
-        name: remoteFileName,
-        path: 'images/' + remoteFileName
-      }, function (err) {
-        if (err) return callback(err);
-        return callback(null);
-      });
-    }, function (err) {
-      callback(err);
-    });
+var fileToImage = function (localFilePath, remoteFileName, localFileName, callback) {
+  var uploadFile = function (callback) {
+    uploadLocalFileToS3(localFilePath, remoteFileName, callback);
+  }, readImageSize = function (callback) {
+    sizeOf(localFilePath, callback);
+  }, createJuicedImage = function (options, callback) {
+    createNewJuicedImage(options, callback);
+  };
+
+  mod_vasync.parallel({
+    funcs: [uploadFile, readImageSize]
+  }, function (err, results) {
+    if (err) return callback(err);
+    createJuicedImage({
+      name: remoteFileName,
+      path: 'images/' + remoteFileName,
+      extension: results.operations[1].result.type,
+      dimensions: {
+        height: results.operations[1].result.height,
+        width: results.operations[1].result.width,
+      }
+    }, callback);
+  });
 };
 
 var uploadLocalFileToS3 = function (localFilePath, remoteFileName, callback) {
-  var deferred = Q.defer();
-
   fs.readFile(localFilePath, function (err, buffer) {
     if (err) return next(err);
     s3.putObject({
       ACL: 'public-read',
-      Bucket: 'static.shiny.co.in',
+      Bucket: CONSTANTS.S3_BUCKET,
       Key: 'images/' + remoteFileName,
       Body: buffer,
       ContentType: 'image/jpg'
-    }, function(err, response) {
-      if (err) deferred.reject(err);
-      else deferred.resolve();
-    });
+    }, callback);
   });
-
-  return deferred.promise;
 };
 
 var createNewJuicedImage = function (options, callback) {
-  var jImage = new JuicedImage({
-    path: options.path,
-    name: options.name
-  });
+  var jImage = new JuicedImage(options);
   return jImage.save(function (err, file) {
     if (err) return callback(err);
     return callback(null, jImage);
@@ -180,7 +219,7 @@ var writeFileToDisk = function (savedFileName, file, callback) {
     if (err) return callback(err);
     return callback(null);
   });
-}
+};
 
 router.post('/new', executeBeforeFilters, function (req, res, next) {
   var savedFileName, incomingFileName;
@@ -194,9 +233,9 @@ router.post('/new', executeBeforeFilters, function (req, res, next) {
     savedFileName = path.normalize(__dirname + '/../' + filename);
     writeFileToDisk(savedFileName, file, function (err) {
       if (err) return next(err);
-      fileToImage(savedFileName, incomingFileName, function (err) {
+      fileToImage(savedFileName, incomingFileName, filename, function (err, file) {
         if (err) return next(err);
-        res.redirect('/admin/files/' + incomingFileName);
+        res.redirect('/admin/files/' + file._id);
       });
     });      
   });
