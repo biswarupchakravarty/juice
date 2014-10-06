@@ -3,10 +3,24 @@
   display: inline-block;
 }
 
+.image-container > img {
+  border: 1px solid black;
+  box-shadow: 0 0 100px;
+}
+
+.image-container.annotating {
+  cursor: crosshair;
+  /*box-shadow: 0 0 1000px rgba(0, 0, 0, 0.5);*/
+  /*z-index: 10000;*/
+  /*position: static;*/
+}
+
 .annotation {
   position: absolute;
   height: 32px;
   width: 32px;
+  margin-left: -8px;
+  margin-top: -8px;
   border: 2px solid black;
   cursor: pointer;
 }
