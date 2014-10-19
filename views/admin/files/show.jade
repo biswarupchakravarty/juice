@@ -1,10 +1,18 @@
 extends ../admin
 
 block append javascripts
+  script(type='text/javascript', src='/javascripts/lib/codemirror.min.js')
   script(type="text/javascript", src="/javascripts/editFile.js")
+  script(type="text/javascript", src="/javascripts/annotations/annotationTypeMap.js")
+  script(type="text/javascript", src="/javascripts/annotations/annotation.js")
+  script(type="text/javascript", src="/javascripts/annotations/formLoader.js")
+  script(type="text/javascript")
+    | var fileId = "#{locals.image.id}";
+    | var image = !{JSON.stringify(locals.image)};
 
 block append stylesheets
   link(rel='stylesheet', href='/stylesheets/admin/edit_file.css')
+  link(rel='stylesheet', href='/stylesheets/lib/codemirror.css')
 
 block append templates
   script(type='text/x-template', id='tmplAnnotationPopover')
@@ -15,7 +23,7 @@ block append templates
 
   script(type='text/x-template', id='tmplAnnotationPopoverContent')
     div.list-group
-      a(class='list-group-item', href='javascript:void(0)', id='lnkEditAnnotation')
+      a(class='list-group-item', href='javascript:void(0)', id='lnkEditAnnotation' data-annotation-id='{{ id }}')
         h4(class='list-group-item-heading') Edit Annotation
         p(class='list-group-item-text')
           | This is some static content that should actually be dynamic. But I'm lazy.
@@ -25,6 +33,8 @@ block append templates
       a(class='list-group-item list-group-item-danger', href='javascript:void(0)')
         span.glyphicon.glyphicon-trash
         |  Delete Annotation
+
+  include ../annotations/common/annotation_form
 
 
 block action
@@ -36,6 +46,9 @@ block action
         span.glyphicon.glyphicon-pencil
         span.glyphicon.glyphicon-pause.hidden
         //- | &nbsp;Edit
+      a.btn.btn-default.btn-md#btnPreview
+        span.glyphicon.glyphicon-eye-open
+        span.glyphicon.glyphicon-eye-close.hidden
       a.btn.btn-default.btn-md#btnDeleteAll
         span.glyphicon.glyphicon-trash
         //- | &nbsp;Delete All

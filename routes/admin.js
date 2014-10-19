@@ -69,6 +69,10 @@ router.get('/', executeBeforeFilters, function(req, res) {
   });
 });
 
+router.get('/templates/forms/:type', function (req, res, next) {
+  res.render('admin/annotations/partials/' + req.params.type + '/form');
+});
+
 router.get('/files/', executeBeforeFilters, function (req, res, next) {
   if (req.query.refresh === 'true') {
     return controller.clearContentsCache(function () {
@@ -94,6 +98,13 @@ router.get('/files/:id', executeBeforeFilters, function (req, res, next) {
       title: 'Edit File',
       image: image
     });
+  });
+});
+
+router.post('/files/:id/annotations', executeBeforeFilters, function (req, res, next) {
+  JuicedImage.update({ _id: req.params.id }, { annotations: req.body.annotations }, function (err, image) {
+    if (err) return next(err);
+    res.end(JSON.stringify({ err: null }));
   });
 });
 

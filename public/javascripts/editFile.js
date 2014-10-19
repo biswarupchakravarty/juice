@@ -1,17 +1,28 @@
-  $(function () {
+$(function () {
+
+  _.templateSettings = {
+    interpolate: /\{\{(.+?)\}\}/g
+  };
+
   var annotating = false,
     paused = false,
     $imageContainer = $('.image-container'),
-    annotations = _.chain([]),
+    annotations = _.chain(window.image.annotations),
 
     $btnStart = $('#btnStart'),
     $btnDeleteAll = $('#btnDeleteAll'),
     $btnSave = $('#btnSave'),
 
-    annotationPopoverTemplate = $('#tmplAnnotationPopover').html(),
+    annotationPopoverTemplate = _.template($('#tmplAnnotationPopover').html()),
     annotationPopoverContent = _.template($('#tmplAnnotationPopoverContent').html());
 
   if ($imageContainer.size() === 0) return;
+
+  var initialize = function () {
+    _.each(window.image.annotations, plotAnnotation);
+    bindAnnotationEvents();
+  };
+  $(initialize);
 
   var startStopAnnotating = function () {
     $imageContainer.toggleClass('annotating');
@@ -25,7 +36,7 @@
       annotation.el.fadeOut('fast');
     });
     unbindAnnotationEvents();
-    annotations = _.chain([]);
+    annotations = _.chain(window.image.annotations);
   };
 
   var bindAnnotationEvents = function () {
@@ -33,11 +44,12 @@
     annotations.each(function (annotation) {
       annotation.el.popover({
         html: true,
-        trigger: 'focus',
+        trigger: 'click',
         placement: 'bottom',
         title: 'Annotation #' + annotation.id,
         content: annotationPopoverContent(annotation),
-        template: annotationPopoverTemplate
+        template: annotationPopoverTemplate(annotation),
+        container: "#adminContainer"
       });
 
       annotation.el.on('click', function () {
@@ -67,6 +79,47 @@
     annotating = false;
   });
 
+  $(document).on('click', '#lnkEditAnnotation', function (e) {
+    var aId = $(this).data('annotation-id');
+    var annotation = annotations.where({ id: aId }).value()[0];
+    $(document).trigger('annotation.open', [ annotation ]);
+    annotations.each(function (a) { a.el.popover('hide'); });
+  });
+
+  $(document).on('annotation.update', function (e, annotation) {
+    NProgress.start();
+    _.extend(annotations.where({ id: annotation.id }), annotation);
+    console.dir(annotations.where({ id: annotation.id }));
+    updateAnnotations().then(function (response) {
+      NProgress.done();
+    });
+  });
+
+  var updateAnnotations = function () {
+    // list of keys to strip before saving the data
+    var keysToIgnore = ['el'], temp;
+
+    // strip the keys
+    var transformedAnnotations = annotations.map(function (annotation) {
+      temp = {};
+      for (var key in annotation) {
+        if (annotation.hasOwnProperty(key) && keysToIgnore.indexOf(key) === -1) {
+          temp[key] = annotation[key];
+        }
+      }
+      return temp;
+    });
+    var postData = { annotations: transformedAnnotations.value() };
+
+    // sync the annotations to the server!
+    return $.ajax({
+      url: '/admin/files/' + window.fileId + '/annotations/',
+      type: 'POST',
+      data: JSON.stringify(postData),
+      contentType: 'application/json'
+    })
+  }
+
   var updateButtonText = function () {
     if (annotations.value().length > 0) {
       $btnSave.html('Save ' + (annotations.value().length) + ' Annotation(s)').attr('disabled', false);
@@ -75,28 +128,33 @@
     }
   };
 
+  var plotAnnotation = function (annotation) {
+    var $d = $('<a></a>')
+      .addClass('annotation')
+      .attr('tabindex', 0)
+      .css({
+        top: annotation.y,
+        left: annotation.x
+      })
+      .data('id', annotation.id)
+      .appendTo($imageContainer);
+
+    annotation.el = $d;
+  };
+
   $imageContainer.on('click', function (e) {
     var id = ~~(Math.random() * 100000),
       $d, annotation;
 
     if (!annotating) return;
 
-    $d = $('<a></a>')
-      .addClass('annotation')
-      .attr('tabindex', 0)
-      .css({
-        top: e.offsetY,
-        left: e.offsetX
-      })
-      .data('id', id)
-      .appendTo($imageContainer);
-
-    annotation = {
+    annotation = new Annotation({
       id: id,
       x: e.offsetX,
-      y: e.offsetY,
-      el: $d
-    };
+      y: e.offsetY
+    });
+
+    plotAnnotation(annotation);
 
     annotations.push(annotation);
 

@@ -1,0 +1,18 @@
+script(type='text/x-template', id='tmplAnnotationLightbox')
+  .modal.fade#annotationModal
+    .modal-dialog
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss='modal')
+            span(aria-hidden='true') ×
+            span.sr-only Close
+          h4.modal-title Modal title
+        .modal-body
+          form(role='form')
+            fieldset
+              include ./annotation_type
+            hr
+            fieldset.annotation-form-content
+        .modal-footer
+          button.btn.btn-default(type='button', data-dismiss='modal') Close
+          button.btn.btn-primary(type='button', id='btnSaveAnnotation') Save changes

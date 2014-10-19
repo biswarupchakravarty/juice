@@ -1,0 +1,11 @@
+div(class='form-group')
+  - var id = ~~(Math.random() * 10000)
+  label(class='control-label', for='optAnnotationType#{id}') Annotation Type
+  select(id='optAnnotationType#{id}', class='form-control')
+    optgroup(label='Static')
+      option(value='static-content', selected='selected') Static Content
+    optgroup(label='Social Content')
+      option(value='social-facebook-post') Facebook Post
+      option(value='social-facebook-like') Facebook Like
+      option(value='social-tweet') Tweet
+      option(value='social-pinterest') Pinterest

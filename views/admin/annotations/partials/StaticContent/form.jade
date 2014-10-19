@@ -1,0 +1,5 @@
+- var id = null
+div(class='form-group')
+  - id = ~~(Math.random() * 10000)
+  label(for='txtStaticContent#{id}') Content (HTML + CSS)
+  textarea(class='form-control', id='txtStaticContent#{id}', rows='8', role='static-content')
