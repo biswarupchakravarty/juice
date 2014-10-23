@@ -10,6 +10,7 @@ var routes = require('./routes/index');
 var users = require('./routes/users');
 var admin = require('./routes/admin');
 var stream = require('./routes/stream');
+var bundles = require('./routes/bundles');
 
 var app = express();
 
@@ -28,6 +29,7 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 
 app.use('/s', stream);
+app.use('/bundles', bundles);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);

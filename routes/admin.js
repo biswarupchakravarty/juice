@@ -22,16 +22,10 @@ var controller = require('../controllers/admin/admin.js');
 
 require('mongoose').connect('mongodb://localhost/myapp');
 
-var beforeFilters = [];
+var FilterCollection = require('../lib/filterCollection');
+var beforeFilters = new FilterCollection();
 
-var executeBeforeFilters = function (req, res, next) {
-  _.each(beforeFilters, function (filter) {
-    filter(req, res);
-  });
-  next();
-};
-
-beforeFilters.push(function prepareNavLinks(req, res) {
+beforeFilters.register(function prepareNavLinks(req, res) {
   if (req.xhr) return;
   _.merge(res.locals, {
     navigationLinks: [{
@@ -50,8 +44,7 @@ beforeFilters.push(function prepareNavLinks(req, res) {
   });
 });
 
-
-beforeFilters.push(function setCurrentAction(req, res) {
+beforeFilters.register(function setCurrentAction(req, res) {
   if (req.xhr) return;
   var tokens = _.where(req.path.split('/'), function (token) {
     return token.trim().length > 0
@@ -61,8 +54,7 @@ beforeFilters.push(function setCurrentAction(req, res) {
   });
 });
 
-
-router.get('/', executeBeforeFilters, function(req, res) {
+router.get('/', beforeFilters.execute, function(req, res) {
   var data = {};
   res.render('admin/index', {
     title: 'Admin Panel',
@@ -73,7 +65,7 @@ router.get('/templates/forms/:type', function (req, res, next) {
   res.render('admin/annotations/partials/' + req.params.type + '/form');
 });
 
-router.get('/files/', executeBeforeFilters, function (req, res, next) {
+router.get('/files/', beforeFilters.execute, function (req, res, next) {
   if (req.query.refresh === 'true') {
     return controller.clearContentsCache(function () {
       res.redirect(req.baseUrl + req.path);
@@ -89,33 +81,39 @@ router.get('/files/', executeBeforeFilters, function (req, res, next) {
   }
 });
 
-router.get('/files/:id', executeBeforeFilters, function (req, res, next) {
+router.get('/files/:id', beforeFilters.execute, function (req, res, next) {
   JuicedImage.find({ _id: req.params.id }, function (err, images) {
     if (err) return next(err);
     if (images.length === 0) return next();
     var image = images[0];
+    console.log(image);
     res.render('admin/files/show', {
       title: 'Edit File',
-      image: image
+      image: image,
+      imageSource: function () {
+        if (image.hostedURL)
+          return image.hostedURL;
+        return ('/s/?image=' + image.path);
+      }
     });
   });
 });
 
-router.post('/files/:id/annotations', executeBeforeFilters, function (req, res, next) {
+router.post('/files/:id/annotations', beforeFilters.execute, function (req, res, next) {
   JuicedImage.update({ _id: req.params.id }, { annotations: req.body.annotations }, function (err, image) {
     if (err) return next(err);
-    res.end(JSON.stringify({ err: null }));
+    res.end(JSON.stringify({ err: null, image: image }));
   });
 });
 
-router.get('/juiced-images/new', executeBeforeFilters, function (req, res, next) {
+router.get('/juiced-images/new', beforeFilters.execute, function (req, res, next) {
   res.locals.file = req.param('file');
   res.render('admin/juiced/new', {
     title: 'Create New Juiced Image'
   });
 });
 
-router.post('/juiced-images/new', executeBeforeFilters, function (req, res, next) {
+router.post('/juiced-images/new', beforeFilters.execute, function (req, res, next) {
   JuicedImage.find({ name: req.body.name }, function (err, images) {
     if (err) return next(err);
     if (images.length !== 0) {
@@ -154,14 +152,14 @@ var removeJuicedImage = function (id, callback) {
   });
 };
 
-router.get('/juiced-images/delete', executeBeforeFilters, function (req, res, next) {
+router.get('/juiced-images/delete', beforeFilters.execute, function (req, res, next) {
   removeJuicedImage(req.query.fileId, function (err) {
     if (err) return next(err);
     res.redirect('back');
   });
 });
 
-router.get('/juiced-images', executeBeforeFilters, function (req, res, next) {
+router.get('/juiced-images', beforeFilters.execute, function (req, res, next) {
   JuicedImage.find(function (err, images) {
     if (err) return next(err);
     res.render('admin/juiced/index', {
@@ -171,7 +169,7 @@ router.get('/juiced-images', executeBeforeFilters, function (req, res, next) {
   });
 });
 
-router.get('/new', executeBeforeFilters, function (req, res, next) {
+router.get('/new', beforeFilters.execute, function (req, res, next) {
   res.render('admin/files/new', {
     title: 'New File'
   });
@@ -232,15 +230,38 @@ var writeFileToDisk = function (savedFileName, file, callback) {
   });
 };
 
-router.post('/new', executeBeforeFilters, function (req, res, next) {
-  var savedFileName, incomingFileName;
+router.post('/new', beforeFilters.execute, function (req, res, next) {
+  var savedFileName, incomingFileName, incomingFileURL;
 
   req.pipe(req.busboy);
   req.busboy.on('field', function(fieldname, val, fieldnameTruncated, valTruncated) {
-    incomingFileName = val.toString('utf8');
+    switch (fieldname) {
+      case 'fileName':
+        incomingFileName = val.toString('utf8');
+        break;
+      case 'fileURL':
+        incomingFileURL = val.toString('utf8');
+        break;
+    }
+
+    // we have a url, do not expect a file
+    if (incomingFileURL && incomingFileName) {
+      createNewJuicedImage({
+        name: incomingFileName,
+        dimensions: {
+          height: 10,
+          width: 10,
+        },
+        hostedURL: incomingFileURL
+      }, function (err, file) {
+        if (err) return next(err);
+        res.redirect('/admin/files/' + file._id);
+      });
+    }
   });
 
   req.busboy.on('file', function (fieldname, file, filename) {
+    if (!filename) return;
     savedFileName = path.normalize(__dirname + '/../' + filename);
     writeFileToDisk(savedFileName, file, function (err) {
       if (err) return next(err);

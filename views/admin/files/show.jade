@@ -1,18 +1,17 @@
 extends ../admin
 
 block append javascripts
-  script(type='text/javascript', src='/javascripts/lib/codemirror.min.js')
   script(type="text/javascript", src="/javascripts/editFile.js")
+  script(type="text/javascript", src="/bundles/js/show.js")
   script(type="text/javascript", src="/javascripts/annotations/annotationTypeMap.js")
-  script(type="text/javascript", src="/javascripts/annotations/annotation.js")
   script(type="text/javascript", src="/javascripts/annotations/formLoader.js")
   script(type="text/javascript")
     | var fileId = "#{locals.image.id}";
     | var image = !{JSON.stringify(locals.image)};
+    | var juiceImage = new JuicedImageView($('.action-container'), image);
 
 block append stylesheets
-  link(rel='stylesheet', href='/stylesheets/admin/edit_file.css')
-  link(rel='stylesheet', href='/stylesheets/lib/codemirror.css')
+  link(rel='stylesheet', href='/bundles/css/editFile.css')
 
 block append templates
   script(type='text/x-template', id='tmplAnnotationPopover')
@@ -23,16 +22,19 @@ block append templates
 
   script(type='text/x-template', id='tmplAnnotationPopoverContent')
     div.list-group
-      a(class='list-group-item', href='javascript:void(0)', id='lnkEditAnnotation' data-annotation-id='{{ id }}')
+      a(class='list-group-item', href='javascript:void(0)', id='lnkEditAnnotation')
         h4(class='list-group-item-heading') Edit Annotation
         p(class='list-group-item-text')
           | This is some static content that should actually be dynamic. But I'm lazy.
       a(class='list-group-item', href='javascript:void(0)')
         span.glyphicon.glyphicon-edit
         |  Edit Annotation
-      a(class='list-group-item list-group-item-danger', href='javascript:void(0)')
+      a(class='list-group-item list-group-item-danger delete-annotation', href='javascript:void(0)')
         span.glyphicon.glyphicon-trash
         |  Delete Annotation
+
+  script(type='text/x-template', id='tmplAnnotationDOM')
+    a(class='annotation', style='top: {{y}}px; left: {{x}}px;')
 
   include ../annotations/common/annotation_form
 
@@ -42,19 +44,19 @@ block action
     h1 Edit &ndash; #{locals.image.name}
   div.row
     .well.btn-group
-      a.btn.btn-default.btn-md#btnStart
+      a.btn.btn-default.btn-md#btnStart Start/Pause
         span.glyphicon.glyphicon-pencil
         span.glyphicon.glyphicon-pause.hidden
         //- | &nbsp;Edit
-      a.btn.btn-default.btn-md#btnPreview
+      a.btn.btn-default.btn-md#btnPreview Preview On/Off
         span.glyphicon.glyphicon-eye-open
         span.glyphicon.glyphicon-eye-close.hidden
-      a.btn.btn-default.btn-md#btnDeleteAll
+      a.btn.btn-default.btn-md#btnDeleteAll Clear
         span.glyphicon.glyphicon-trash
         //- | &nbsp;Delete All
   div.row
     div.image-container.well
-      img(src="/s/?image=#{locals.image.path}", class="img-responsive", id="mainImage")
+      img(src="#{locals.imageSource()}", class="img-responsive", id="mainImage")
 
   div.row
     div.col-xs-12

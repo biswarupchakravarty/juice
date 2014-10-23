@@ -11,6 +11,7 @@ var BUCKET_CONTENTS_TTL = 60 * 60;
 
 var transformBucketListing = function (response) {
   var prefix = 'images/', empty = '';
+  if (!response) return [];
   return _.chain(response['Contents'])
     .map(function (item) {
       return {
@@ -35,8 +36,8 @@ module.exports = controller = {
       if (err) return callback(err);
       if (!_.isEmpty(value)) return callback(null, value[BUCKET_CONTENTS_KEY]);
       s3.listObjects(params, function(err, data) {
-        data = transformBucketListing(data);
         if (err) return callback(err);
+        data = transformBucketListing(data);
         adminCache.set(BUCKET_CONTENTS_KEY, data, BUCKET_CONTENTS_TTL);
         return callback(null, data);
       });

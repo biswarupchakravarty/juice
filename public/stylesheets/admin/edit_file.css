@@ -24,3 +24,7 @@
   border: 2px solid black;
   cursor: pointer;
 }
+
+.annotation .popover {
+  width: 300px;
+}

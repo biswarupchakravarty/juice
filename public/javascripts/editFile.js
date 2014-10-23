@@ -1,5 +1,5 @@
 $(function () {
-
+  return;
   _.templateSettings = {
     interpolate: /\{\{(.+?)\}\}/g
   };
@@ -24,20 +24,20 @@ $(function () {
   };
   $(initialize);
 
-  var startStopAnnotating = function () {
-    $imageContainer.toggleClass('annotating');
-    $btnStart.find('.glyphicon-pencil').toggleClass('hidden').end().find('.glyphicon-pause').toggleClass('hidden');
-    annotating ? bindAnnotationEvents() : unbindAnnotationEvents();
-    annotating = !annotating;
-  };
+  // var startStopAnnotating = function () {
+  //   $imageContainer.toggleClass('annotating');
+  //   $btnStart.find('.glyphicon-pencil').toggleClass('hidden').end().find('.glyphicon-pause').toggleClass('hidden');
+  //   annotating ? bindAnnotationEvents() : unbindAnnotationEvents();
+  //   annotating = !annotating;
+  // };
 
-  var removeAnnotations = function () {
-    annotations.each(function (annotation) {
-      annotation.el.fadeOut('fast');
-    });
-    unbindAnnotationEvents();
-    annotations = _.chain(window.image.annotations);
-  };
+  // var removeAnnotations = function () {
+  //   annotations.each(function (annotation) {
+  //     annotation.el.fadeOut('fast');
+  //   });
+  //   unbindAnnotationEvents();
+  //   annotations = _.chain(window.image.annotations);
+  // };
 
   var bindAnnotationEvents = function () {
     unbindAnnotationEvents();

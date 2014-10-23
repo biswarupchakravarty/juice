@@ -13,8 +13,17 @@ block action
         div(class='form-group')
           label(for='txtFileName', class='control-label') Name
           input(type='text', name='fileName', class='form-control', id='txtFileName', placeholder='Enter File Name', autofocus)
+        hr
+        div(class='form-group')
+          label(for='txtFileURL', class='control-label') URL
+          input(type='text', name='fileURL', class='form-control', id='txtFileURL', placeholder='Enter File URL', value='/images/1.png')
+        h4(style='text-align: center') Or
         div(class='form-group')
           label(for='fileInput', class='control-label') File
           input(type='file', name='image', id='fileInput')
+        hr
+        div
+          img(id='imgPreview', class='img-responsive')
+        hr
         div(class='form-group')
           a(href='javascript:void(0)', class='btn btn-block btn-primary', id='lnkUpload') Upload

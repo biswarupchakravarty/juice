@@ -1,19 +1,17 @@
 extends ../layout
 
-block append javascripts
-  script(src='//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js')
-  script(src='/javascripts/nprogress.js')
+block javascripts
+  script(src='/bundles/js/admin.js')
 
-block append stylesheets
-  link(rel='stylesheet', href='/stylesheets/admin.css')
-  link(rel='stylesheet', href='/stylesheets/nprogress.css')
+block stylesheets
+  link(rel='stylesheet', href='/bundles/css/admin.css')
 
 block content
   .container-fluid#adminContainer
     .row
       .col-sm-3.col-md-2.sidebar
         include ./partials/navbar
-      .col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main
+      .col-sm-9.col-sm-offset-3.col-md-10.col-md-offset-2.main.action-container
         block action
         img2(src='/s/ironman.jpg', class="img-responsive")
     .row

@@ -11,7 +11,7 @@
     // initialize CodeMirror here
     
     this.container.find('[role=static-content]').text(this.options.content);
-    var myCodeMirror = CodeMirror.fromTextArea(this.container.find('[role=static-content]').get(0), {
+    this.codeMirror = CodeMirror.fromTextArea(this.container.find('[role=static-content]').get(0), {
       theme: 'mdn-like',
       lineNumbers: true
     });
@@ -19,7 +19,7 @@
 
   StaticContentAnnotation.prototype.toJSON = function () {
     return {
-      content: this.container.find('[role=static-content]').val()
+      content: this.codeMirror.getValue()
     };
   };
 

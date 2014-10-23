@@ -8,6 +8,8 @@ module.exports = {
 
   extension: String,
 
+  hostedURL: String,
+
   annotations: [],
 
   dimensions: {
