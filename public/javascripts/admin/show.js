@@ -6,6 +6,9 @@
     interpolate: /\{\{(.+?)\}\}/g
   };
 
+  window.CM = window.CodeMirror;
+  window.CodeMirror = null;
+
   window.annotationPopoverTemplate = _.template($('#tmplAnnotationPopover').html()),
   window.annotationPopoverContent = _.template($('#tmplAnnotationPopoverContent').html());
   window.annotationDOMTemplate = _.template($('#tmplAnnotationDOM').html());

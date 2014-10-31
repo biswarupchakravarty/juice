@@ -1,6 +1,7 @@
 var Bundle = require('../lib/bundle');
 var BUNDLES = require('../lib/bundles/main.js');
 var SUPPORTED_BUNDLE_TYPES = ['css', 'js'];
+var _ = require('lodash');
 
 var controller = {
 
@@ -22,8 +23,7 @@ var controller = {
   },
 
   getContentType: function (bundle) {
-    var bundleType = bundle.type.toLowerCase(),
-      extension;
+    var bundleType = bundle.type.toLowerCase();
 
     switch (bundleType) {
       case 'js': return 'application/javascript';
@@ -32,16 +32,46 @@ var controller = {
         if (bundle.files[0].indexOf('.svg') !== -1) return 'image/svg+xml';
         if (bundle.files[0].indexOf('.ttf') !== -1) return 'application/x-font-ttf';
         if (bundle.files[0].indexOf('.woff') !== -1) return 'application/x-font-woff';
-        if (bundle.files[0].indexOf('.woff') !== -1) return 'application/vnd.ms-fontobject';
+        if (bundle.files[0].indexOf('.etc') !== -1) return 'application/vnd.ms-fontobject';
+      case 'templates': return 'text/html';
     }
   },
 
+  getCustomHeaders: function (bundle) {
+    var bundleType = bundle.type.toLowerCase(), headers = [];
+
+    headers.push({
+      key: 'Content-Type',
+      value: controller.getContentType(bundle)
+    });
+
+    switch (bundleType) {
+      case 'js':
+      case 'css':
+        // headers.push({ key: 'Content-Encoding', value: 'gzip' });
+        // headers.push({ key: 'Accept-Ranges', value: 'bytes' });
+        // headers.push({ key: 'Vary', value: 'Accept-Encoding' });
+        break;
+      case 'fonts':
+        headers.push({ key: 'Accept-Ranges', value: 'bytes' });
+        break;
+    }
+    return headers;
+  },
+
+  applyHeaders: function (bundle, response) {
+    var headers = controller.getCustomHeaders(bundle);
+    _.each(headers, function (header) {
+      response.setHeader(header.key, header.value);
+    });
+  },
+
   serve: function (req, res, next) {
-    var bundle = controller.parse(req.url);
+    var bundle = controller.parse(req.url), customHeaders;
     if (!controller.isValidBundle(bundle))
       return next();
     return bundle.compile(function (compiledBundle) {
-      res.setHeader('Content-Type', controller.getContentType(bundle));
+      controller.applyHeaders(bundle, res);
       res.end(compiledBundle);
     });
   }

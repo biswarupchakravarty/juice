@@ -36,24 +36,27 @@
       container: this.$el
     });
 
-    this.$el.on('click', function () {
-      return false;
-    }).on('click', '.delete-annotation', $.proxy(function () {
-      this.deleteAnnotation();
-    }, this));
+    this.$el
+      .on('click', _.bind(this.onAnnotationClick, this))
+      .on('click', '.delete-annotation', _.bind(this.deleteAnnotation, this))
+      .on('click', '#lnkEditAnnotation', _.bind(this.editAnnotation, this));
+
   };
 
-  view.prototype.showMenu = function() {
-    this.$el.trigger('click');
-  };
+  view.prototype.showMenu = function() { this.$el.trigger('click'); };
 
-  view.prototype.getDOM = function () {
-    return this.$el;
-  };
+  view.prototype.getDOM = function () { return this.$el; };
+
+  view.prototype.onAnnotationClick = function (e) { return false; };
 
   view.prototype.deleteAnnotation = function () {
     this.removeDOM();
     this.juicedImage.trigger('annotation.delete', this);
+  };
+
+  view.prototype.editAnnotation = function (e) {
+    var annotation = this.model;
+    this.juicedImage.trigger('annotation.open', this);
   };
 
 }(jQuery));

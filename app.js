@@ -1,10 +1,12 @@
 var express = require('express');
+var compression = require('compression')();
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var busboy = require('connect-busboy');
+var zlib = require('zlib')
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -13,6 +15,8 @@ var stream = require('./routes/stream');
 var bundles = require('./routes/bundles');
 
 var app = express();
+
+app.use(compression)
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -30,6 +34,7 @@ app.use(cookieParser());
 
 app.use('/s', stream);
 app.use('/bundles', bundles);
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);

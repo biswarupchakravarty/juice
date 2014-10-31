@@ -17,7 +17,8 @@
 
   view.prototype.initializeEvents = function () {
     this.$imageContainer.on('click', $.proxy(this.onImageClick, this));
-    this.$imageContainer.on('annotation.delete', $.proxy(this.onAnnotationDelete, this));
+    this.$imageContainer.on('annotation.delete', _.bind(this.onAnnotationDelete, this));
+    this.$imageContainer.on('annotation.open', _.bind(this.onEditAnnotation, this));
   };
 
   view.prototype.renderAnnotation = function (annotationView) {
@@ -33,9 +34,13 @@
     this.syncModel();
   };
 
-  view.prototype.onAnnotationDelete = function(event, annotationView) {
+  view.prototype.onAnnotationDelete = function (event, annotationView) {
     this.model.removeAnnotation(annotationView.model);
     this.syncModel();
+  };
+
+  view.prototype.onEditAnnotation = function  (event, annotation) {
+    console.log(annotation);
   };
 
   view.prototype.syncModel = function () {

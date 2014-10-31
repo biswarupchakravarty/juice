@@ -1,14 +1,9 @@
 extends ../admin
 
 block append javascripts
-  script(type="text/javascript", src="/javascripts/editFile.js")
   script(type="text/javascript", src="/bundles/js/show.js")
-  script(type="text/javascript", src="/javascripts/annotations/annotationTypeMap.js")
-  script(type="text/javascript", src="/javascripts/annotations/formLoader.js")
   script(type="text/javascript")
-    | var fileId = "#{locals.image.id}";
-    | var image = !{JSON.stringify(locals.image)};
-    | var juiceImage = new JuicedImageView($('.action-container'), image);
+    | var juiceImage = new JuicedImageView($('.action-container'), !{JSON.stringify(locals.image)});
 
 block append stylesheets
   link(rel='stylesheet', href='/bundles/css/editFile.css')

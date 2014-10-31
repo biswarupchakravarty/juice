@@ -1,5 +1,39 @@
-$(function () {
+(function ($) {
 
+  var modalContent = $('#tmplAnnotationLightbox').html(),
+    showModal = function () { $('#annotationModal').modal(); },
+    annotationModelConstructor, annotationModel;
+
+  var fetchJS = function (annotationType) {
+    var d = new $.Deferred(),
+      scriptSelector = 'script[data-annotation-forms]';
+
+    if ($(scriptSelector).size() > 0)
+      d.resolve();
+
+    $.get('/bundles/js/annotationForms.js', function (js) {
+      if ($(scriptSelector).size() === 0) {
+        $('<script></script>').html(js).attr('data-annotation-forms', true).appendTo($('body'));
+      }
+      d.resolve();
+    });
+    return d.promise();
+  };
+
+  var loader = window.FormLoader = {
+
+    loadAnnotationForm: function (annotation) {
+      fetchJS(annotation.type).then(function () {
+        
+      });
+    }
+
+  }
+
+}(jQuery));
+
+$(function () {
+  return;
   var modalContent = $('#tmplAnnotationLightbox').html(),
     showModal = function () { $('#annotationModal').modal(); },
     annotationModelConstructor, annotationModel;
