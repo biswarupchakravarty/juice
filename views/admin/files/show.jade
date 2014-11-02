@@ -1,12 +1,16 @@
 extends ../admin
 
 block append javascripts
-  script(type="text/javascript", src="/bundles/js/show.js")
+  //- script(type="text/javascript", src="/bundles/js/show.js")
+  script(type='text/javascript', src="/javascripts/resources.js")
   script(type="text/javascript")
-    | var juiceImage = new JuicedImageView($('.action-container'), !{JSON.stringify(locals.image)});
+    | var onLoad = function () {
+    |   var juiceImage = new JuicedImageView($('.action-container'), !{JSON.stringify(locals.image)});
+    | }
+  //- script(type='text/x-combined', src="/bundles/pages/edit", id='tmplAssets', async)
 
 block append stylesheets
-  link(rel='stylesheet', href='/bundles/css/editFile.css')
+  //- link(rel='stylesheet', href='/bundles/css/editFile.css')
 
 block append templates
   script(type='text/x-template', id='tmplAnnotationPopover')
@@ -51,7 +55,7 @@ block action
         //- | &nbsp;Delete All
   div.row
     div.image-container.well
-      img(src="#{locals.imageSource()}", class="img-responsive", id="mainImage")
+      img(data-img-src="#{locals.imageSource()}", class="img-responsive", id="mainImage")
 
   div.row
     div.col-xs-12

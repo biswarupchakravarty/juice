@@ -13,13 +13,27 @@ var controller = {
   parse: function (url) {
     var tokens = url.split('/').filter(function (token) {
       return token.trim().length > 0;
-    });
+    }), parsedBundle;
+
     if (!BUNDLES[tokens[0]] || !BUNDLES[tokens[0]][tokens[1]]) return false;
-    return new Bundle({
+    parsedBundle = new Bundle({
       type: tokens[0],
       name: tokens[1],
       files: BUNDLES[tokens[0]][tokens[1]]
     });
+    parsedBundle = controller.expand(parsedBundle);
+    return parsedBundle;
+  },
+
+  expand: function (compositeBundle) {
+    var files = [], tokens;
+    if (compositeBundle.type !== 'pages') return compositeBundle;
+    _.each(compositeBundle.files, function (file) {
+      tokens = file.split('/');
+      files = files.concat(BUNDLES[tokens[2]][tokens[3]]);
+    });
+    compositeBundle.files = files;
+    return compositeBundle;
   },
 
   getContentType: function (bundle) {
