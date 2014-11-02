@@ -48,6 +48,7 @@ var controller = {
         if (bundle.files[0].indexOf('.woff') !== -1) return 'application/x-font-woff';
         if (bundle.files[0].indexOf('.etc') !== -1) return 'application/vnd.ms-fontobject';
       case 'templates': return 'text/html';
+      case 'pages': return 'text/plain';
     }
   },
 

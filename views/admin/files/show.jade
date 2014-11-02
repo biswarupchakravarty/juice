@@ -2,7 +2,7 @@ extends ../admin
 
 block append javascripts
   //- script(type="text/javascript", src="/bundles/js/show.js")
-  script(type='text/javascript', src="/javascripts/resources.js")
+  script(type='text/javascript', src="/javascripts/resources.js", async, defer)
   script(type="text/javascript")
     | var onLoad = function () {
     |   var juiceImage = new JuicedImageView($('.action-container'), !{JSON.stringify(locals.image)});
